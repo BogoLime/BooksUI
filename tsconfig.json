@@ -1,9 +1,10 @@
 {
   "compilerOptions": {
+    "esModuleInterop": true,
     "baseUrl": ".",
     "outDir": "build/dist",
     "module": "esnext",
-    "target": "es5",
+    "target": "es6",
     "lib": ["es7", "dom"],
     "sourceMap": true,
     "allowJs": true,
@@ -16,10 +17,10 @@
     "importHelpers": true,
     "strictNullChecks": true,
     "suppressImplicitAnyIndexErrors": true,
-    "noUnusedLocals": true,
+    "noUnusedLocals": false,
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
   },
   "exclude": [
     "node_modules",

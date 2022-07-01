@@ -9,9 +9,15 @@ import Wrapper from './components/Wrapper';
 import Header from './components/Header';
 import Loader from './components/Loader';
 import ConnectButton from './components/ConnectButton';
+import AppRouter from './routes/Router';
 
 import { Web3Provider } from '@ethersproject/providers';
 import { getChainData } from './helpers/utilities';
+import { getContract } from './helpers/ethers';
+import ContractAddress from './constants/address';
+import ABI from "./constants/abi/BookStore.json"
+import MyContext from "./store/ContractContext"
+
 
 const SLayout = styled.div`
   position: relative;
@@ -58,6 +64,7 @@ interface IAppState {
   result: any | null;
   electionContract: any | null;
   info: any | null;
+  contract?:any
 }
 
 const INITIAL_STATE: IAppState = {
@@ -73,6 +80,7 @@ const INITIAL_STATE: IAppState = {
 };
 
 class App extends React.Component<any, any> {
+  public static contextType = MyContext
   // @ts-ignore
   public web3Modal: Web3Modal;
   public state: IAppState;
@@ -106,11 +114,16 @@ class App extends React.Component<any, any> {
 
     const address = this.provider.selectedAddress ? this.provider.selectedAddress : this.provider.accounts[0];
 
+    const contract = getContract(ContractAddress,ABI.abi,library,address)
+
+    await  this.context.setContract(contract)
+
     await this.setState({
       library,
       chainId: network.chainId,
       address,
-      connected: true
+      connected: true,
+      contract
     });
 
     await this.subscribeToProviderEvents(this.provider);
@@ -210,7 +223,9 @@ class App extends React.Component<any, any> {
               </Column>
             ) : (
                 <SLanding center>
-                  {!this.state.connected && <ConnectButton onClick={this.onConnect} />}
+                  {!this.state.connected 
+                  ? <ConnectButton onClick={this.onConnect} /> 
+                  : <AppRouter/>}
                 </SLanding>
               )}
           </SContent>

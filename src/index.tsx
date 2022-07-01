@@ -7,6 +7,9 @@ import { globalStyle } from "./styles";
 const GlobalStyle = createGlobalStyle`
   ${globalStyle}
 `;
+import { BrowserRouter } from "react-router-dom";
+
+import CtxProvider from "./store/Provider"
 
 // @ts-ignore
 declare global {
@@ -24,7 +27,11 @@ declare global {
 ReactDOM.render(
   <>
     <GlobalStyle />
-    <App />
+    <BrowserRouter>
+    <CtxProvider>
+      <App />
+    </CtxProvider>
+    </BrowserRouter>
   </>,
   document.getElementById("root")
 );

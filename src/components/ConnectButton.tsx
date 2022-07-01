@@ -14,7 +14,7 @@ const SConnectButtonContainer = styled.div`
 `
 
 interface IConnectButtonStyleProps {
-  disabled: boolean
+  disabled?: boolean
   icon?: any
 }
 
