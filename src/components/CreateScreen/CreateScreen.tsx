@@ -36,18 +36,24 @@ function CreateScreen(props:any){
     function onClickHandler(e:React.FormEvent<HTMLButtonElement>){
         e.preventDefault()
         async function inner(){
-        const Trx = await context.contract.addBook(name,count)
-        
-        setTrxhash(`https://ropsten.etherscan.io/tx/${Trx.hash}`)
-        
-        setFetching(true)
 
-        const receipt = await Trx.wait()
-        if(receipt.status !== 1){
-            setHasErrorMsg("Transaction failed")
-        }
-        
-        setFetching(false)
+            try{
+                const Trx = await context.contract.addBook(name,count)
+                
+                setTrxhash(`https://ropsten.etherscan.io/tx/${Trx.hash}`)
+                
+                setFetching(true)
+
+                const receipt = await Trx.wait()
+                if(receipt.status !== 1){
+                    setHasErrorMsg("Transaction failed")
+                }
+                
+                setFetching(false)
+
+                }catch(e){
+                    setHasErrorMsg(e.error.message)
+            }
         }
         
         inner()

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import FormFactory from '../Forms/FormFactory';
-import {useState, useContext} from "react"
+import {useState, useContext, useEffect} from "react"
 import MyContext from 'src/store/ContractContext';
 import Loader from '../Loader';
 import styled from 'styled-components';
@@ -31,21 +31,31 @@ function RentScreen(props:any){
         e.preventDefault()
 
         async function inner(){
-            const Trx = await context.contract.rentBook(name)
-    
-            setTrxhash(`https://ropsten.etherscan.io/tx/${Trx.hash}`)
+            try{
+                const Trx = await context.contract.rentBook(name)
+        
+                setTrxhash(`https://ropsten.etherscan.io/tx/${Trx.hash}`)
 
-            setFetching(true)
+                setFetching(true)
 
-            const receipt = await Trx.wait()
-            if(receipt.status !== 1){
-                setHasErrorMsg("Transaction failed")
+                const receipt = await Trx.wait()
+                if(receipt.status !== 1){
+                    setHasErrorMsg("Transaction failed")
+                }
+
+                setFetching(false)
+
+                context.contract.on("BookRented", (name:string,renter:string,trx:any) => { 
+                    console.log("Book has been rented")
+                    console.log(name,renter)
+                })
+
+            }catch(e){
+                setHasErrorMsg(e.error.message)
             }
-
-            setFetching(false)
-            }
+        }
     
-            inner()
+        inner()
     }
 
     return fetching 

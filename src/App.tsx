@@ -18,6 +18,7 @@ import ContractAddress from './constants/address';
 import ABI from "./constants/abi/BookStore.json"
 import MyContext from "./store/ContractContext"
 
+import { attachListeners } from './utils/listeners';
 
 const SLayout = styled.div`
   position: relative;
@@ -101,8 +102,12 @@ class App extends React.Component<any, any> {
 
   public componentDidMount() {
     if (this.web3Modal.cachedProvider) {
-      this.onConnect();
+      this.onConnect().then( () => {
+        attachListeners(this.context.contract)
+      })
     }
+    
+
   }
 
   public onConnect = async () => {
@@ -171,7 +176,8 @@ class App extends React.Component<any, any> {
   }
   
   public close = async () => {
-    this.resetApp();
+    await this.resetApp();
+    await this.context.contract.removeAllListeners()
   }
 
   public getNetwork = () => getChainData(this.state.chainId).network;

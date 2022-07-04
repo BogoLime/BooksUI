@@ -29,18 +29,23 @@ function ReturnScreen(props:any){
     function onClickHandler(e:React.FormEvent<HTMLButtonElement>){
         e.preventDefault()
         async function inner(){
-        const Trx = await context.contract.returnBook(name)
+            try{    
+                const Trx = await context.contract.returnBook(name)
 
-        setTrxhash(`https://ropsten.etherscan.io/tx/${Trx.hash}`)
+                setTrxhash(`https://ropsten.etherscan.io/tx/${Trx.hash}`)
 
-        setFetching(true)
+                setFetching(true)
 
-        const receipt = await Trx.wait()
-        if(receipt.status !== 1){
-            setHasErrorMsg("Transaction failed")
-        }
+                const receipt = await Trx.wait()
+                if(receipt.status !== 1){
+                    setHasErrorMsg("Transaction failed")
+                }
 
-        setFetching(false)
+                setFetching(false)
+                }
+            catch(e){
+                setHasErrorMsg(e.error.message)
+            }
         }
 
         inner()
