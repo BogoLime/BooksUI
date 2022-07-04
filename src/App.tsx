@@ -14,11 +14,13 @@ import AppRouter from './routes/Router';
 import { Web3Provider } from '@ethersproject/providers';
 import { getChainData } from './helpers/utilities';
 import { getContract } from './helpers/ethers';
-import ContractAddress from './constants/address';
-import ABI from "./constants/abi/BookStore.json"
+import {ContractAddress,LIBAdress} from './constants/address';
+import BooksABI from "./constants/abi/BookStore.json"
+import LibABI from "./constants/abi/LIBToken.json"
 import MyContext from "./store/ContractContext"
 
 import { attachListeners } from './utils/listeners';
+import { ethers } from 'ethers';
 
 const SLayout = styled.div`
   position: relative;
@@ -113,15 +115,24 @@ class App extends React.Component<any, any> {
   public onConnect = async () => {
     this.provider = await this.web3Modal.connect();
 
+    const isValidContract = ethers.utils.isAddress(ContractAddress)
+    const isValidLIB =  ethers.utils.isAddress(LIBAdress)
+
+    console.log(`Contract Address is Valid  - ${isValidContract} / LIB Address is Valid  - ${isValidLIB} `)
+
     const library = new Web3Provider(this.provider);
 
     const network = await library.getNetwork();
 
     const address = this.provider.selectedAddress ? this.provider.selectedAddress : this.provider.accounts[0];
 
-    const contract = getContract(ContractAddress,ABI.abi,library,address)
+    const contract = getContract(ContractAddress,BooksABI.abi,library,address)
+
+    const libToken = getContract(LIBAdress,LibABI.abi,library,address)
 
     await  this.context.setContract(contract)
+
+    await this.context.setLibToken(libToken)
 
     await this.setState({
       library,
@@ -231,7 +242,7 @@ class App extends React.Component<any, any> {
                 <SLanding center>
                   {!this.state.connected 
                   ? <ConnectButton onClick={this.onConnect} /> 
-                  : <AppRouter/>}
+                  : <AppRouter address={address}/>}
                 </SLanding>
               )}
           </SContent>

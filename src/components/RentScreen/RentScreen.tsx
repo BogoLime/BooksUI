@@ -4,6 +4,7 @@ import {useState, useContext, useEffect} from "react"
 import MyContext from 'src/store/ContractContext';
 import Loader from '../Loader';
 import styled from 'styled-components';
+import { ethers } from 'ethers';
 
 const SLink = styled.a`
 font-weight:700;
@@ -32,7 +33,12 @@ function RentScreen(props:any){
 
         async function inner(){
             try{
-                const Trx = await context.contract.rentBook(name)
+                const parsedEth = ethers.utils.parseEther("0.1")
+
+                let Trx = await context.libToken.approve(context.contract.address,parsedEth)
+                await Trx.wait()
+
+                Trx = await context.contract.rentBook(name)
         
                 setTrxhash(`https://ropsten.etherscan.io/tx/${Trx.hash}`)
 
@@ -51,7 +57,8 @@ function RentScreen(props:any){
                 })
 
             }catch(e){
-                setHasErrorMsg(e.error.message)
+                console.log(e)
+                // setHasErrorMsg(e.error.message)
             }
         }
     
