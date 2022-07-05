@@ -5,7 +5,7 @@ import * as React from 'react';
 
 
 const SHeading = styled.h3`
-margin-bottom:10rem;
+margin-bottom:4rem;
 `
 
 function TokenBalance (props:any){

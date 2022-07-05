@@ -9,10 +9,9 @@ import Box from './Box';
 const SDiv = styled.div`
 display:grid;
 grid-template-columns: 1fr 1fr;
-grid-template-rows: 1fr 1fr;
 justify-content:center;
 width: 30rem;
-height:25rem;
+height:45rem;
 `
 
 function Home(props:any){
@@ -36,12 +35,16 @@ function Home(props:any){
     )
 
     return <React.Fragment>
-        <TokenBalance> Your LIB Balance: {libBalance} LIB </TokenBalance>
+        <TokenBalance> Your LIB Balance: <p>💸 {libBalance} LIB 💸</p> </TokenBalance>
         <SDiv>
             <Box href = {"/create-book"}>Create Book</Box>
             <Box href = {"/return-book"}>Return Book</Box>
             <Box href = {"/rent-book"}>Rent Book</Box>
             <Box href = {"/available-books"}>Available Books</Box>
+            <Box href = {"/sign-message"}>Sign Message</Box>
+            <Box href = {"/send-sign-message"}>Transfer Signed Coins</Box>
+            <Box href = {"/delegate-rent"}>Delegated Rent</Box>
+            <Box href = {"/permit-rent"}> Rent With Permit</Box>
         </SDiv>
     </React.Fragment>
 }

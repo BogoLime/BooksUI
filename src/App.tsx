@@ -21,6 +21,8 @@ import MyContext from "./store/ContractContext"
 
 import { attachListeners } from './utils/listeners';
 import { ethers } from 'ethers';
+import Button from './components/Button';
+import { Link } from "react-router-dom";
 
 const SLayout = styled.div`
   position: relative;
@@ -104,9 +106,7 @@ class App extends React.Component<any, any> {
 
   public componentDidMount() {
     if (this.web3Modal.cachedProvider) {
-      this.onConnect().then( () => {
-        attachListeners(this.context.contract)
-      })
+      this.onConnect()
     }
     
 
@@ -146,6 +146,102 @@ class App extends React.Component<any, any> {
 
   };
 
+  public signMessage = async(messageToSign:string) => {
+    const library = this.state.library
+    async function inner() {
+      const signer = library.getSigner()
+
+      const msgHash = ethers.utils.solidityKeccak256(["string"],[messageToSign])
+  
+      const arrayfiedHash = ethers.utils.arrayify(msgHash);
+  
+      const signedMessage = await signer.signMessage(arrayfiedHash);
+      console.log("Hashed",msgHash)
+      console.log("Signed",signedMessage)
+    }
+
+    inner()
+    
+  }
+
+  public wrapWithSignedMessage = () => {
+    const library = this.state.library
+    async function inner(hashedMessage:string, signedMessage:string, receiver:string, contract:any) {
+      const parsedEth = ethers.utils.parseEther("0.1")
+      const sig = ethers.utils.splitSignature(signedMessage);
+      const wrapTx = await contract.wrapWithSignature(hashedMessage, sig.v, sig.r, sig.s, receiver, {value: parsedEth})
+      await wrapTx.wait()
+    }
+
+    return inner
+}
+
+public onAttemptToApprove() {
+  const { address, library } = this.state;
+  const {contract,libToken} = this.context
+
+  async function inner (){
+  
+  const nonce = (await libToken.nonces(address)); 
+  const deadline = + new Date() + 60 * 60; 
+  const wrapValue = ethers.utils.parseEther('0.1'); 
+  
+  const EIP712Domain = [ 
+      { name: 'name', type: 'string' },
+      { name: 'version', type: 'string' },
+      { name: 'verifyingContract', type: 'address' }
+  ];
+
+  const domain = {
+      name: await libToken.name(),
+      version: '1',
+      verifyingContract: libToken.address
+  };
+
+  const Permit = [ // array of objects -> properties from erc20withpermit
+      { name: 'owner', type: 'address' },
+      { name: 'spender', type: 'address' },
+      { name: 'value', type: 'uint256' },
+      { name: 'nonce', type: 'uint256' },
+      { name: 'deadline', type: 'uint256' }
+  ];
+
+  const message = {
+      owner: address,
+      spender: contract.address,
+      value: wrapValue.toString(),
+      nonce: nonce.toHexString(),
+      deadline
+  };
+
+  const data = JSON.stringify({
+      types: {
+          EIP712Domain,
+          Permit
+      },
+      domain,
+      primaryType: 'Permit',
+      message
+  })
+
+  const signatureLike = await library.send('eth_signTypedData_v4', [address, data]);
+  const signature = await ethers.utils.splitSignature(signatureLike)
+
+  const preparedSignature = {
+      v: signature.v,
+      r: signature.r,
+      s: signature.s,
+      deadline
+  }
+
+  return preparedSignature
+
+}
+
+return inner
+}
+
+
   public subscribeToProviderEvents = async (provider:any) => {
     if (!provider.on) {
       return;
@@ -154,6 +250,8 @@ class App extends React.Component<any, any> {
     provider.on("accountsChanged", this.changedAccount);
     provider.on("networkChanged", this.networkChanged);
     provider.on("close", this.close);
+
+    await attachListeners(this.context.contract)
 
     await this.web3Modal.off('accountsChanged');
   };
@@ -168,6 +266,7 @@ class App extends React.Component<any, any> {
     provider.off("accountsChanged", this.changedAccount);
     provider.off("networkChanged", this.networkChanged);
     provider.off("close", this.close);
+    await this.context.contract.removeAllListeners()
   }
 
   public changedAccount = async (accounts: string[]) => {
@@ -220,7 +319,8 @@ class App extends React.Component<any, any> {
       address,
       connected,
       chainId,
-      fetching
+      fetching,
+      library
     } = this.state;
     return (
       <SLayout>
@@ -231,6 +331,12 @@ class App extends React.Component<any, any> {
             chainId={chainId}
             killSession={this.resetApp}
           />
+            <Link to="/">
+              <Button color='blue'>Home</Button>
+            </Link>
+            <Link to="/mint">
+            <Button color='green'>Mint LIB 🤑</Button>
+            </Link>
           <SContent>
             {fetching ? (
               <Column center>
@@ -242,7 +348,10 @@ class App extends React.Component<any, any> {
                 <SLanding center>
                   {!this.state.connected 
                   ? <ConnectButton onClick={this.onConnect} /> 
-                  : <AppRouter address={address}/>}
+                  : <AppRouter address={address} signMessage ={this.signMessage} 
+                  sendSignedMsg = {this.wrapWithSignedMessage()} 
+                  library = {library}
+                  onAttemptToApprove= {this.onAttemptToApprove()}/>}
                 </SLanding>
               )}
           </SContent>

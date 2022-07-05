@@ -1,6 +1,6 @@
 import * as React from 'react';
 import FormFactory from '../Forms/FormFactory';
-import {useState, useContext, useEffect} from "react"
+import {useState, useContext} from "react"
 import MyContext from 'src/store/ContractContext';
 import Loader from '../Loader';
 import styled from 'styled-components';
@@ -11,8 +11,8 @@ font-weight:700;
 text-decoration:underline
 `
 
-function RentScreen(props:any){
-    const [name, setName] = useState("")
+function MintScreen(props:any){
+    const [amount, setAmount] = useState("")
     const [trxHash, setTrxhash] = useState("")
     const [fetching, setFetching] = useState(false)
     const [hasErrorMsg,setHasErrorMsg] = useState("")
@@ -20,31 +20,23 @@ function RentScreen(props:any){
 
 
     function nameChangeHandler(e:React.ChangeEvent<HTMLInputElement>){
-        setName(e.target.value)
+        setAmount(e.target.value)
     }
     
-
     const formFields =[
-        {label: "Book Name",value:name, onChange:nameChangeHandler, type:"text"},
+        {label: "ETH Amount",value:amount,onChange:nameChangeHandler, type:"number"},
     ]
 
     function onClickHandler(e:React.FormEvent<HTMLButtonElement>){
         e.preventDefault()
-
         async function inner(){
-            try{
+            try{  
+                const parsedEth = ethers.utils.parseEther(amount)
+                const Trx = await context.contract.wrap({value:parsedEth})
+
+                setTrxhash(`https://ropsten.etherscan.io/tx/${Trx.hash}`)
+
                 setFetching(true)
-                const parsedEth = ethers.utils.parseEther("0.1")
-
-                let Trx = await context.libToken.approve(context.contract.address,parsedEth)
-                await Trx.wait()
-
-                setTrxhash(`https://ropsten.etherscan.io/tx/${Trx.hash}`)
-
-                Trx = await context.contract.rentBook(name)
-        
-                setTrxhash(`https://ropsten.etherscan.io/tx/${Trx.hash}`)
-
 
                 const receipt = await Trx.wait()
                 if(receipt.status !== 1){
@@ -52,8 +44,8 @@ function RentScreen(props:any){
                 }
 
                 setFetching(false)
-
-            }catch(e){
+                }
+            catch(e){
                 console.log(e)
                 if("error" in e){
                     setHasErrorMsg(e.error.message)
@@ -65,7 +57,7 @@ function RentScreen(props:any){
                 setFetching(false)
             }
         }
-    
+
         inner()
     }
 
@@ -74,7 +66,7 @@ function RentScreen(props:any){
         <Loader/> 
         <p> {`Check transaction at`} <SLink href={trxHash}> {"Etherscan"}</SLink></p> 
     </React.Fragment>
-    :<FormFactory fields = { formFields } btn = {{onClick:onClickHandler, text: "Rent book"}} fail={{failMsg:hasErrorMsg,onClick:setHasErrorMsg}}/>
+    :<FormFactory fields = { formFields } btn = {{onClick:onClickHandler, text: "Mint LIB"}} fail={{failMsg:hasErrorMsg,onClick:setHasErrorMsg}}/>
 }
 
-export default RentScreen
+export default MintScreen

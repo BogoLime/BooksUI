@@ -38,6 +38,8 @@ function CreateScreen(props:any){
         async function inner(){
 
             try{
+                if(+count < 1) {throw Error("Book value must be at least 1")}
+
                 const Trx = await context.contract.addBook(name,count)
                 
                 setTrxhash(`https://ropsten.etherscan.io/tx/${Trx.hash}`)
@@ -52,7 +54,15 @@ function CreateScreen(props:any){
                 setFetching(false)
 
                 }catch(e){
-                    setHasErrorMsg(e.error.message)
+                    console.log(e)
+                    if("error" in e){
+                        setHasErrorMsg(e.error.message)
+                    } else if ("message" in e){
+                        setHasErrorMsg( e.message)
+                    }else{
+                        setHasErrorMsg("Unexpected Error")
+                    }
+                    setFetching(false)
             }
         }
         
